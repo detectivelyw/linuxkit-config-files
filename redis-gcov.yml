@@ -1,0 +1,51 @@
+kernel:
+  image: linuxkit/kernel:4.14.24-ebb7528d3bf7866db6ed0bf75688bcc76706cedc-dirty-amd64
+  cmdline: "console=tty0 console=ttyS0 console=ttyAMA0 console=ttysclp0"
+init:
+  - linuxkit/init:b212cfeb4bb6330e0a7547d8010fe2e8489b677a
+  - linuxkit/runc:7c39a68490a12cde830e1922f171c451fb08e731
+  - linuxkit/containerd:37e397ebfc6bd5d8e18695b121166ffd0cbfd9f0
+  - linuxkit/getty:v0.2
+onboot:
+  - name: dhcpcd
+    image: linuxkit/dhcpcd:v0.2
+    command: ["/sbin/dhcpcd", "--nobackground", "-f", "/dhcpcd.conf", "-1"]
+services:
+  - name: redis
+    image: redis:4.0.5-alpine
+    capabilities:
+     - CAP_NET_BIND_SERVICE
+     - CAP_CHOWN
+     - CAP_SETUID
+     - CAP_SETGID
+     - CAP_DAC_OVERRIDE
+    net: host
+    binds:
+     - /home/redis-script:/home/redis-script
+  - name: ubuntu
+    image: ubuntu:17.10
+    capabilities:
+     - all
+    binds:
+     - /etc/resolv.conf:/etc/resolv.conf
+     - /sys:/sys
+     - /run:/run
+     - /root/.ssh/id_rsa:/root/.ssh/id_rsa
+    command: ["sh", "-c", "sleep infinity"]
+files:
+  - path: /root/.profile
+    source: "/home/detectivelyw/Documents/projects/tracks/popular-paths-scripts/bash_profile_root"
+    mode: "0777"
+  - path: /root/.ssh/id_rsa
+    source: "/home/detectivelyw/.ssh/id_rsa"
+    mode: "0600"
+  - path: /root/linuxkit-script
+    source: "/home/detectivelyw/Documents/projects/tracks/popular-paths-scripts/linuxkit-auto-script-09-redis.sh"
+    mode: "0777"
+  - path: /home/redis-script
+    source: "/home/detectivelyw/Documents/projects/tracks/popular-paths-scripts/redis-script.sh"
+    mode: "0777"
+trust:
+  org:
+    - linuxkit
+    - library
